@@ -30,11 +30,10 @@ resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
 }
 
-
 resource "azurerm_kubernetes_cluster" "cluster" {
   location            = var.location
   name                = var.cluster_name
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.rg.name
   dns_prefix          = "aks-lt-prow"
 
   identity {
