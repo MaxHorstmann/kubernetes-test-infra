@@ -35,7 +35,7 @@ presubmits:
         - --stage=gs://kubernetes-release-pull/ci/pull-kubernetes-e2e-containerd-gce
         - --test_args=--ginkgo.skip=\[Slow\]|\[Serial\]|\[Disruptive\]|\[Flaky\]|\[Feature:.+\]|\[NodeFeature:RuntimeHandler\] --minStartupPods=8
         - --timeout=80m     # thinking about making this longer? don't! 80m is a hard cap, and should get down to no more than 60m.
-        image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+        image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         resources:
           requests:
             memory: "6Gi"
@@ -58,7 +58,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --job=$(JOB_NAME)
@@ -108,7 +108,7 @@ presubmits:
     spec:
       serviceAccountName: node-e2e-tests
       containers:
-        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           command:
             - runner.sh
           args:
@@ -117,7 +117,7 @@ presubmits:
             - name: FOCUS
               value: NodeConformance
             - name: TEST_ARGS
-              value: '--container-runtime-process-name=/usr/bin/containerd --container-runtime-pid-file= --kubelet-flags="--runtime-cgroups=/system.slice/containerd.service" --extra-log="{\"name\": \"containerd.log\", \"journalctl\": [\"-u\", \"containerd*\"]}"'
+              value: '--container-runtime-process-name=/usr/bin/containerd --container-runtime-pid-file= --kubelet-flags="--cgroup-driver=systemd --cgroups-per-qos=true --cgroup-root=/ --runtime-cgroups=/system.slice/containerd.service" --extra-log="{\"name\": \"containerd.log\", \"journalctl\": [\"-u\", \"containerd*\"]}"'
           resources:
             limits:
               cpu: 4
@@ -125,6 +125,167 @@ presubmits:
             requests:
               cpu: 4
               memory: 6Gi
+  - name: pull-kubernetes-node-arm64-e2e-containerd-ec2
+    skip_branches:
+      - release-\d+\.\d+  # per-release image
+    annotations:
+      fork-per-release: "true"
+      testgrid-alert-stale-results-hours: "24"
+      testgrid-create-test-group: "true"
+      testgrid-num-failures-to-alert: "10"
+    labels:
+      preset-e2e-containerd-ec2: "true"
+      preset-dind-enabled: "true"
+    path_alias: k8s.io/kubernetes
+    always_run: false # flip after tests are green
+    optional: true # flip after tests are green
+    cluster: eks-prow-build-cluster
+    max_concurrency: 50
+    decorate: true
+    extra_refs:
+      - org: kubernetes-sigs
+        repo: provider-aws-test-infra
+        base_ref: main
+        path_alias: sigs.k8s.io/provider-aws-test-infra
+        workdir: true
+    spec:
+      serviceAccountName: node-e2e-tests
+      containers:
+        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
+          command:
+            - runner.sh
+          args:
+            - hack/make-rules/test-e2e-node.sh
+          env:
+            - name: FOCUS
+              value: NodeConformance
+            - name: USE_DOCKERIZED_BUILD
+              value: "true"
+            - name: TARGET_BUILD_ARCH
+              value: "linux/arm64"
+            - name: IMAGE_CONFIG_FILE
+              value: aws-instance-arm64.yaml
+            - name: TEST_ARGS
+              value: '--container-runtime-process-name=/usr/bin/containerd --container-runtime-pid-file= --kubelet-flags="--runtime-cgroups=/system.slice/containerd.service" --extra-log="{\"name\": \"containerd.log\", \"journalctl\": [\"-u\", \"containerd*\"]}"'
+          # docker-in-docker needs privileged mode
+          securityContext:
+            privileged: true
+          resources:
+            limits:
+              cpu: 4
+              memory: 6Gi
+            requests:
+              cpu: 4
+              memory: 6Gi
+  - name: pull-kubernetes-node-arm64-e2e-containerd-serial-ec2
+    skip_branches:
+      - release-\d+\.\d+  # per-release image
+    annotations:
+      fork-per-release: "true"
+      testgrid-alert-stale-results-hours: "24"
+      testgrid-create-test-group: "true"
+      testgrid-num-failures-to-alert: "10"
+    labels:
+      preset-e2e-containerd-ec2: "true"
+      preset-dind-enabled: "true"
+    path_alias: k8s.io/kubernetes
+    always_run: false # flip after tests are green
+    optional: true # flip after tests are green
+    cluster: eks-prow-build-cluster
+    max_concurrency: 50
+    decorate: true
+    extra_refs:
+      - org: kubernetes-sigs
+        repo: provider-aws-test-infra
+        base_ref: main
+        path_alias: sigs.k8s.io/provider-aws-test-infra
+        workdir: true
+    spec:
+      serviceAccountName: node-e2e-tests
+      containers:
+        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
+          command:
+            - runner.sh
+          args:
+            - hack/make-rules/test-e2e-node.sh
+          env:
+            - name: FOCUS
+              value: \[Serial\]
+            - name: SKIP
+              value: \[Flaky\]|\[Benchmark\]|\[NodeSpecialFeature:.+\]|\[NodeSpecialFeature\]|\[NodeAlphaFeature:.+\]|\[NodeAlphaFeature\]|\[NodeFeature:Eviction\]
+            - name: USE_DOCKERIZED_BUILD
+              value: "true"
+            - name: TARGET_BUILD_ARCH
+              value: "linux/arm64"
+            - name: IMAGE_CONFIG_FILE
+              value: aws-instance-arm64.yaml
+            - name: TEST_ARGS
+              value: '--kubelet-flags="--cgroup-driver=systemd --cgroups-per-qos=true --cgroup-root=/ --runtime-cgroups=/system.slice/containerd.service" --extra-log="{\"name\": \"containerd.log\", \"journalctl\": [\"-u\", \"containerd*\"]}"'
+          # docker-in-docker needs privileged mode
+          securityContext:
+            privileged: true
+          resources:
+            limits:
+              cpu: 8
+              memory: 10Gi
+            requests:
+              cpu: 8
+              memory: 10Gi
+  - name: pull-kubernetes-node-arm64-ubuntu-serial-gce
+    # this is functional duplicated with `pull-kubernetes-node-arm64-e2e-containerd-serial-ec2`, consider to remove one of them when either of them is green
+    skip_branches:
+    - release-\d+\.\d+  # per-release image
+    always_run: false
+    optional: true
+    decorate: true
+    path_alias: k8s.io/kubernetes
+    extra_refs:
+      - org: kubernetes
+        repo: test-infra
+        base_ref: master
+        path_alias: k8s.io/test-infra
+    decoration_config:
+      timeout: 180m
+    labels:
+      preset-service-account: "true"
+      preset-k8s-ssh: "true"
+      preset-dind-enabled: "true"
+    annotations:
+      fork-per-release: "true"
+      testgrid-create-test-group: "true"
+      testgrid-alert-stale-results-hours: "24"
+      testgrid-num-failures-to-alert: "10"
+    spec:
+      containers:
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-experimental
+        command:
+        - runner.sh
+        args:
+          - kubetest2
+          - noop
+          - --test=node
+          - --
+          - --repo-root=.
+          - --gcp-zone=us-central1-a
+          - --parallelism=1
+          - --focus-regex=\[Serial\]
+          - --use-dockerized-build=true
+          - --target-build-arch=linux/arm64
+          - --skip-regex=\[Flaky\]|\[Benchmark\]|\[NodeSpecialFeature:.+\]|\[NodeSpecialFeature\]|\[NodeAlphaFeature:.+\]|\[NodeAlphaFeature\]|\[NodeFeature:Eviction\]|\[Feature:DynamicResourceAllocation\]
+          - '--test-args=--container-runtime-endpoint=unix:///run/containerd/containerd.sock --container-runtime-process-name=/usr/bin/containerd --container-runtime-pid-file= --kubelet-flags="--cgroup-driver=systemd --cgroups-per-qos=true --cgroup-root=/ --runtime-cgroups=/system.slice/containerd.service" --extra-log="{\"name\": \"containerd.log\", \"journalctl\": [\"-u\", \"containerd*\"]}"'
+          - --image-config-file=/home/prow/go/src/k8s.io/test-infra/jobs/e2e_node/arm/image-config-serial.yaml
+        securityContext:
+          privileged: true
+        env:
+          - name: GOPATH
+            value: /go
+        resources:
+          limits:
+            cpu: 4
+            memory: 6Gi
+          requests:
+            cpu: 4
+            memory: 6Gi
   - name: pull-kubernetes-node-e2e-containerd-kubetest2
     always_run: false
     optional: true
@@ -153,7 +314,7 @@ presubmits:
       containers:
       # experimental have the kubetest2 binaries
       # https://github.com/kubernetes/test-infra/blob/3c3d64f398a5e4f324200d25183c98a4bfa842ac/images/kubekins-e2e/variants.yaml#L8
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-experimental
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-experimental
         resources:
           limits:
             cpu: 4
@@ -192,7 +353,7 @@ presubmits:
       testgrid-create-test-group: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --repo=k8s.io/$(REPO_NAME)=$(PULL_REFS)
@@ -252,7 +413,7 @@ presubmits:
       containers:
       # experimental have the kubetest2 binaries
       # https://github.com/kubernetes/test-infra/blob/3c3d64f398a5e4f324200d25183c98a4bfa842ac/images/kubekins-e2e/variants.yaml#L8
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-experimental
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-experimental
         env:
         - name: GOPATH
           value: /go
@@ -296,7 +457,7 @@ presubmits:
       testgrid-tab-name: pr-node-kubelet-containerd-alpha-features
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --repo=k8s.io/$(REPO_NAME)=$(PULL_REFS)
@@ -339,7 +500,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           args:
           - "--repo=k8s.io/$(REPO_NAME)=$(PULL_REFS)"
           - --timeout=260
@@ -393,7 +554,7 @@ presubmits:
       containers:
       # experimental have the kubetest2 binaries
       # https://github.com/kubernetes/test-infra/blob/3c3d64f398a5e4f324200d25183c98a4bfa842ac/images/kubekins-e2e/variants.yaml#L8
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-experimental
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-experimental
         env:
         - name: GOPATH
           value: /go
@@ -433,7 +594,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           resources:
             limits:
               cpu: 4
@@ -492,7 +653,7 @@ presubmits:
       containers:
       # experimental have the kubetest2 binaries
       # https://github.com/kubernetes/test-infra/blob/3c3d64f398a5e4f324200d25183c98a4bfa842ac/images/kubekins-e2e/variants.yaml#L8
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-experimental
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-experimental
         env:
         - name: GOPATH
           value: /go
@@ -531,7 +692,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           resources:
             limits:
               cpu: 4
@@ -590,7 +751,7 @@ presubmits:
       containers:
       # experimental have the kubetest2 binaries
       # https://github.com/kubernetes/test-infra/blob/3c3d64f398a5e4f324200d25183c98a4bfa842ac/images/kubekins-e2e/variants.yaml#L8
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-experimental
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-experimental
         env:
         - name: GOPATH
           value: /go
@@ -629,7 +790,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           resources:
             limits:
               cpu: 4
@@ -672,7 +833,7 @@ presubmits:
       preset-pull-kubernetes-e2e-gce: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - "--job=$(JOB_NAME)"
@@ -718,7 +879,7 @@ presubmits:
       preset-pull-kubernetes-e2e-gce: "true"
     spec:
       containers:
-        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           args:
             - --root=/go/src
             - "--job=$(JOB_NAME)"
@@ -778,7 +939,7 @@ presubmits:
       containers:
       # experimental have the kubetest2 binaries
       # https://github.com/kubernetes/test-infra/blob/3c3d64f398a5e4f324200d25183c98a4bfa842ac/images/kubekins-e2e/variants.yaml#L8
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-experimental
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-experimental
         resources:
           limits:
             cpu: 4
@@ -821,7 +982,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - "--job=$(JOB_NAME)"
@@ -867,7 +1028,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - "--job=$(JOB_NAME)"
@@ -915,7 +1076,7 @@ presubmits:
       preset-pull-kubernetes-e2e-gce: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - "--job=$(JOB_NAME)"
@@ -975,7 +1136,7 @@ presubmits:
       containers:
       # experimental have the kubetest2 binaries
       # https://github.com/kubernetes/test-infra/blob/3c3d64f398a5e4f324200d25183c98a4bfa842ac/images/kubekins-e2e/variants.yaml#L8
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-experimental
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-experimental
         resources:
           limits:
             cpu: 4
@@ -1018,7 +1179,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           resources:
             limits:
               cpu: 4
@@ -1062,7 +1223,7 @@ presubmits:
       preset-pull-kubernetes-e2e-gce: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - "--job=$(JOB_NAME)"
@@ -1107,7 +1268,7 @@ presubmits:
       preset-pull-kubernetes-e2e-gce: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - "--job=$(JOB_NAME)"
@@ -1151,7 +1312,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           args:
             - --root=/go/src
             - "--job=$(JOB_NAME)"
@@ -1198,7 +1359,7 @@ presubmits:
       preset-pull-kubernetes-e2e-gce: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - "--job=$(JOB_NAME)"
@@ -1246,7 +1407,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
           - --root=/go/src
           - "--job=$(JOB_NAME)"
@@ -1297,7 +1458,7 @@ presubmits:
       preset-kind-volume-mounts: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         command:
         - runner.sh
         args:
@@ -1341,7 +1502,7 @@ presubmits:
       preset-pull-kubernetes-e2e-gce: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
           - --root=/go/src
           - "--job=$(JOB_NAME)"
@@ -1392,7 +1553,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --job=$(JOB_NAME)
@@ -1436,7 +1597,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --job=$(JOB_NAME)
@@ -1480,7 +1641,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --job=$(JOB_NAME)
@@ -1524,7 +1685,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --job=$(JOB_NAME)
@@ -1568,7 +1729,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --job=$(JOB_NAME)
@@ -1612,7 +1773,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --job=$(JOB_NAME)
@@ -1694,7 +1855,7 @@ presubmits:
         - --stage=gs://kubernetes-release-pull/ci/pull-kubernetes-e2e-gce-inplace-pod-resize-containerd-main-v2
         - --test_args=--ginkgo.focus=\[Feature:InPlacePodVerticalScaling\]
         - --timeout=150m
-        image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+        image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         resources:
           limits:
             cpu: 4
@@ -1718,7 +1879,7 @@ presubmits:
       preset-k8s-ssh: "true"
     spec:
      containers:
-        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+        - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           resources:
             limits:
               cpu: 4
@@ -1737,7 +1898,7 @@ presubmits:
             - --
             - --deployment=node
             - --gcp-zone=us-west1-b
-            - --node-args=--image-config-file=/workspace/test-infra/jobs/e2e_node/containerd/image-config-serial.yaml
+            - --node-args=--image-config-file=/workspace/test-infra/jobs/e2e_node/containerd/image-config-serial-eviction.yaml
             - '--node-test-args=--feature-gates=PodDisruptionConditions=true --container-runtime-endpoint=unix:///run/containerd/containerd.sock --container-runtime-process-name=/usr/bin/containerd --container-runtime-pid-file= --kubelet-flags="--cgroup-driver=systemd --cgroups-per-qos=true --cgroup-root=/ --runtime-cgroups=/system.slice/containerd.service" --extra-log="{\"name\": \"containerd.log\", \"journalctl\": [\"-u\", \"containerd*\"]}"'
             - --node-tests=true
             - --provider=gce
@@ -1765,7 +1926,7 @@ presubmits:
       testgrid-tab-name: pr-node-kubelet-containerd-standalone-mode-all-alpha
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --repo=k8s.io/$(REPO_NAME)=$(PULL_REFS)
@@ -1812,7 +1973,7 @@ presubmits:
       testgrid-tab-name: pr-node-kubelet-containerd-standalone-mode
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --repo=k8s.io/$(REPO_NAME)=$(PULL_REFS)
@@ -1861,7 +2022,7 @@ presubmits:
       testgrid-tab-name: pr-node-kubelet-containerd-sidecar-containers
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --repo=k8s.io/$(REPO_NAME)=$(PULL_REFS)
@@ -1907,7 +2068,7 @@ presubmits:
       testgrid-tab-name: pr-node-kubelet-crio-dra
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         args:
         - --root=/go/src
         - --job=$(JOB_NAME)
@@ -1923,7 +2084,7 @@ presubmits:
         - '--node-test-args=--feature-gates="DynamicResourceAllocation=true" --service-feature-gates="DynamicResourceAllocation=true" --runtime-config=resource.k8s.io/v1alpha2=true --container-runtime-endpoint=unix:///var/run/crio/crio.sock --container-runtime-process-name=/usr/local/bin/crio --container-runtime-pid-file= --kubelet-flags="--cgroup-driver=systemd --cgroups-per-qos=true --cgroup-root=/ --runtime-cgroups=/system.slice/crio.service --kubelet-cgroups=/system.slice/kubelet.service" --extra-log="{\"name\": \"crio.log\", \"journalctl\": [\"-u\", \"crio\"]}"'
         - --node-tests=true
         - --provider=gce
-        - --test_args=--focus="\[NodeFeature:DynamicResourceAllocation\]" --skip="\[Flaky\]"
+        - --test_args=--focus="\[Feature:DynamicResourceAllocation\]" --skip="\[Flaky\]"
         - --timeout=65m
         - --node-args=--image-config-file=/workspace/test-infra/jobs/e2e_node/crio/latest/image-config-cgrpv1-serial.yaml
         env:
@@ -1958,7 +2119,7 @@ presubmits:
       spec:
         serviceAccountName: node-e2e-tests
         containers:
-          - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+          - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
             command:
               - runner.sh
             args:
@@ -1967,7 +2128,7 @@ presubmits:
               - name: FOCUS
                 value: NodeConformance
               - name: TEST_ARGS
-                value: '--container-runtime-process-name=/usr/bin/containerd --container-runtime-pid-file= --kubelet-flags="--runtime-cgroups=/system.slice/containerd.service" --extra-log="{\"name\": \"containerd.log\", \"journalctl\": [\"-u\", \"containerd*\"]}"'
+                value: '--container-runtime-process-name=/usr/bin/containerd --container-runtime-pid-file= --kubelet-flags="--cgroup-driver=systemd --cgroups-per-qos=true --cgroup-root=/ --runtime-cgroups=/system.slice/containerd.service" --extra-log="{\"name\": \"containerd.log\", \"journalctl\": [\"-u\", \"containerd*\"]}"'
             resources:
               limits:
                 cpu: 4
@@ -1975,3 +2136,141 @@ presubmits:
               requests:
                 cpu: 4
                 memory: 6Gi
+    - name: pull-kubernetes-node-arm64-e2e-containerd-ec2-canary
+      # duplicate job of in the k/k repo to test changes in provider-aws-test-infra repo
+      annotations:
+        testgrid-alert-stale-results-hours: "24"
+        testgrid-create-test-group: "true"
+        testgrid-num-failures-to-alert: "10"
+      labels:
+        preset-e2e-containerd-ec2: "true"
+        preset-dind-enabled: "true"
+      path_alias: sigs.k8s.io/provider-aws-test-infra
+      always_run: true
+      optional: false
+      cluster: eks-prow-build-cluster
+      decorate: true
+      extra_refs:
+        - org: kubernetes
+          repo: kubernetes
+          base_ref: master
+          path_alias: k8s.io/kubernetes
+      spec:
+        serviceAccountName: node-e2e-tests
+        containers:
+          - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
+            command:
+              - runner.sh
+            args:
+              - hack/make-rules/test-e2e-node.sh
+            env:
+              - name: FOCUS
+                value: NodeConformance
+              - name: USE_DOCKERIZED_BUILD
+                value: "true"
+              - name: TARGET_BUILD_ARCH
+                value: "linux/arm64"
+              - name: IMAGE_CONFIG_FILE
+                value: aws-instance-arm64.yaml
+              - name: TEST_ARGS
+                value: '--container-runtime-process-name=/usr/bin/containerd --container-runtime-pid-file= --kubelet-flags="--runtime-cgroups=/system.slice/containerd.service" --extra-log="{\"name\": \"containerd.log\", \"journalctl\": [\"-u\", \"containerd*\"]}"'
+            # docker-in-docker needs privileged mode
+            securityContext:
+              privileged: true
+            resources:
+              limits:
+                cpu: 4
+                memory: 6Gi
+              requests:
+                cpu: 4
+                memory: 6Gi
+    - name: pull-kubernetes-node-e2e-containerd-serial-ec2-canary
+      # duplicate job of in the k/k repo to test changes in provider-aws-test-infra repo
+      annotations:
+        testgrid-alert-stale-results-hours: "24"
+        testgrid-create-test-group: "true"
+        testgrid-num-failures-to-alert: "10"
+      labels:
+        preset-e2e-containerd-ec2: "true"
+      path_alias: sigs.k8s.io/provider-aws-test-infra
+      always_run: true
+      optional: false
+      cluster: eks-prow-build-cluster
+      decorate: true
+      extra_refs:
+        - org: kubernetes
+          repo: kubernetes
+          base_ref: master
+          path_alias: k8s.io/kubernetes
+      spec:
+        serviceAccountName: node-e2e-tests
+        containers:
+          - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
+            command:
+              - runner.sh
+            args:
+              - hack/make-rules/test-e2e-node.sh
+            env:
+              - name: FOCUS
+                value: \[Serial\]
+              - name: SKIP
+                value: \[Flaky\]|\[Benchmark\]|\[NodeSpecialFeature:.+\]|\[NodeSpecialFeature\]|\[NodeAlphaFeature:.+\]|\[NodeAlphaFeature\]|\[NodeFeature:Eviction\]
+              - name: TEST_ARGS
+                value: '--kubelet-flags="--cgroup-driver=systemd --cgroups-per-qos=true --cgroup-root=/ --runtime-cgroups=/system.slice/containerd.service" --extra-log="{\"name\": \"containerd.log\", \"journalctl\": [\"-u\", \"containerd*\"]}"'
+            resources:
+              limits:
+                cpu: 8
+                memory: 10Gi
+              requests:
+                cpu: 8
+                memory: 10Gi
+    - name: pull-kubernetes-node-arm64-e2e-containerd-serial-ec2-canary
+      # duplicate job of in the k/k repo to test changes in provider-aws-test-infra repo
+      annotations:
+        testgrid-alert-stale-results-hours: "24"
+        testgrid-create-test-group: "true"
+        testgrid-num-failures-to-alert: "10"
+      labels:
+        preset-e2e-containerd-ec2: "true"
+        preset-dind-enabled: "true"
+      path_alias: sigs.k8s.io/provider-aws-test-infra
+      always_run: true
+      optional: false
+      cluster: eks-prow-build-cluster
+      decorate: true
+      extra_refs:
+        - org: kubernetes
+          repo: kubernetes
+          base_ref: master
+          path_alias: k8s.io/kubernetes
+      spec:
+        serviceAccountName: node-e2e-tests
+        containers:
+          - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
+            command:
+              - runner.sh
+            args:
+              - hack/make-rules/test-e2e-node.sh
+            env:
+              - name: FOCUS
+                value: \[Serial\]
+              - name: SKIP
+                value: \[Flaky\]|\[Benchmark\]|\[NodeSpecialFeature:.+\]|\[NodeSpecialFeature\]|\[NodeAlphaFeature:.+\]|\[NodeAlphaFeature\]|\[NodeFeature:Eviction\]
+              - name: USE_DOCKERIZED_BUILD
+                value: "true"
+              - name: TARGET_BUILD_ARCH
+                value: "linux/arm64"
+              - name: IMAGE_CONFIG_FILE
+                value: aws-instance-arm64.yaml
+              - name: TEST_ARGS
+                value: '--kubelet-flags="--cgroup-driver=systemd --cgroups-per-qos=true --cgroup-root=/ --runtime-cgroups=/system.slice/containerd.service" --extra-log="{\"name\": \"containerd.log\", \"journalctl\": [\"-u\", \"containerd*\"]}"'
+            # docker-in-docker needs privileged mode
+            securityContext:
+              privileged: true
+            resources:
+              limits:
+                cpu: 8
+                memory: 10Gi
+              requests:
+                cpu: 8
+                memory: 10Gi

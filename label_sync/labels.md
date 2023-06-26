@@ -124,7 +124,6 @@ larger set of contributors to apply/remove them.
 | <a id="sig/storage" href="#sig/storage">`sig/storage`</a> | Categorizes an issue or PR as relevant to SIG Storage.| anyone |  [label](https://git.k8s.io/test-infra/prow/plugins/label) |
 | <a id="sig/testing" href="#sig/testing">`sig/testing`</a> | Categorizes an issue or PR as relevant to SIG Testing.| anyone |  [label](https://git.k8s.io/test-infra/prow/plugins/label) |
 | <a id="sig/ui" href="#sig/ui">`sig/ui`</a> | Categorizes an issue or PR as relevant to SIG UI.| anyone |  [label](https://git.k8s.io/test-infra/prow/plugins/label) |
-| <a id="sig/usability" href="#sig/usability">`sig/usability`</a> | Categorizes an issue or PR as relevant to SIG Usability.| anyone |  [label](https://git.k8s.io/test-infra/prow/plugins/label) |
 | <a id="sig/windows" href="#sig/windows">`sig/windows`</a> | Categorizes an issue or PR as relevant to SIG Windows.| anyone |  [label](https://git.k8s.io/test-infra/prow/plugins/label) |
 | <a id="triage/accepted" href="#triage/accepted">`triage/accepted`</a> | Indicates an issue or PR is ready to be actively worked on.| org members |  [label](https://git.k8s.io/test-infra/prow/plugins/label) |
 | <a id="triage/duplicate" href="#triage/duplicate">`triage/duplicate`</a> | Indicates an issue is a duplicate of other open issue. <br><br> This was previously `close/duplicate`, `duplicate`, | humans | |
@@ -230,6 +229,7 @@ larger set of contributors to apply/remove them.
 | ---- | ----------- | -------- | --- |
 | <a id="area/api" href="#area/api">`area/api`</a> | Issues or PRs related to the APIs| anyone |  [label](https://git.k8s.io/test-infra/prow/plugins/label) |
 | <a id="area/artifacts" href="#area/artifacts">`area/artifacts`</a> | Issues or PRs related to the hosting of release artifacts| anyone |  [label](https://git.k8s.io/test-infra/prow/plugins/label) |
+| <a id="area/ci" href="#area/ci">`area/ci`</a> | Issues or PRs related to ci| anyone |  [label](https://git.k8s.io/test-infra/prow/plugins/label) |
 | <a id="area/release" href="#area/release">`area/release`</a> | Issues or PRs related to releasing| anyone |  [label](https://git.k8s.io/test-infra/prow/plugins/label) |
 | <a id="area/security" href="#area/security">`area/security`</a> | Issues or PRs related to security| anyone |  [label](https://git.k8s.io/test-infra/prow/plugins/label) |
 | <a id="area/testing" href="#area/testing">`area/testing`</a> | Issues or PRs related to testing| anyone |  [label](https://git.k8s.io/test-infra/prow/plugins/label) |

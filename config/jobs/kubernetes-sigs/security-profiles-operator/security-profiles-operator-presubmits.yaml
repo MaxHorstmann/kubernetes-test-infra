@@ -14,10 +14,10 @@ presubmits:
         - hack/pull-security-profiles-operator-build
         resources:
           limits:
-            cpu: 4
+            cpu: 8
             memory: 4Gi
           requests:
-            cpu: 4
+            cpu: 8
             memory: 4Gi
 
   - name: pull-security-profiles-operator-verify
@@ -34,10 +34,10 @@ presubmits:
         - hack/pull-security-profiles-operator-verify
         resources:
           limits:
-            cpu: 10
+            cpu: 12
             memory: 8Gi
           requests:
-            cpu: 10
+            cpu: 12
             memory: 8Gi
 
   - name: pull-security-profiles-operator-test-unit
@@ -54,10 +54,10 @@ presubmits:
         - hack/pull-security-profiles-operator-test-unit
         resources:
           limits:
-            cpu: 4
+            cpu: 8
             memory: 4Gi
           requests:
-            cpu: 4
+            cpu: 8
             memory: 4Gi
 
   - name: pull-security-profiles-operator-build-image
@@ -73,15 +73,15 @@ presubmits:
       preset-kind-volume-mounts: "true"
     spec:
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         securityContext:
           privileged: true  # for dind
         resources:
           requests:
-            memory: 2Gi
+            memory: 1Gi
             cpu: 2
           limits:
-            memory: 2Gi
+            memory: 1Gi
             cpu: 2
         command:
         - runner.sh
@@ -103,16 +103,16 @@ presubmits:
       hostNetwork: true
       hostPID: true
       containers:
-      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230613-63d85f5ed2-master
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         securityContext:
           privileged: true  # for dind
         resources:
           requests:
-            memory: 4Gi
-            cpu: 6
+            memory: 2Gi
+            cpu: 5
           limits:
-            memory: 4Gi
-            cpu: 6
+            memory: 2Gi
+            cpu: 5
         command:
         - runner.sh
         args:
