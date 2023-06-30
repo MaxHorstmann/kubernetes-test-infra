@@ -34,14 +34,14 @@ resource "azurerm_kubernetes_cluster" "cluster" {
   location            = var.location
   name                = var.cluster_name
   resource_group_name = azurerm_resource_group.rg.name
-  dns_prefix          = "aks-lt-prow"
+  dns_prefix          = "aks-lts-prow"
 
   identity {
     type = "SystemAssigned"
   }
 
   default_node_pool {
-    name       = "agentpool"
+    name       = "prow"
     vm_size    = "Standard_D2_v2"
     node_count = 3
   }
