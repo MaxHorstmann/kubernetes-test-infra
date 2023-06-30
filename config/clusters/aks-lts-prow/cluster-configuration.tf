@@ -6,7 +6,7 @@ This file defines the configuration for the `aks-lts-prow` cluster:
 
 variable "resource_group_name" {
   type        = string
-  default     = "aks-lt-prow"
+  default     = "aks-lts-prow"
 }
 
 variable "location" {
