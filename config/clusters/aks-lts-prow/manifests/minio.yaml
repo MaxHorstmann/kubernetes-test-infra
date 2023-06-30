@@ -39,12 +39,12 @@ spec:
         args:
         - gateway
         - azure
-        - --console-address=0.0.0.0:8003
+        - --console-address=0.0.0.0:$MINIO_CONSOLE_PORT
         env:
         - name: MINIO_ROOT_USER
-          value: "$MINIO_ROOT_USER"
+          value: "$AZURE_STORAGE_ACCOUNT_USER"
         - name: MINIO_ROOT_PASSWORD
-          value: "$MINIO_ROOT_PASSWORD"
+          value: "$AZURE_STORAGE_ACCOUNT_PASSWORD"
         - name: MINIO_REGION_NAME
           value: minio
         ports:
@@ -81,8 +81,8 @@ metadata:
 spec:
   type: NodePort
   ports:
-  - port: 8003
-    targetPort: 8003
+  - port: $MINIO_CONSOLE_PORT
+    targetPort: $MINIO_CONSOLE_PORT
     protocol: TCP
   selector:
     app: minio
