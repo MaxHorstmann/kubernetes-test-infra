@@ -15,6 +15,8 @@ spec:
   ports:
   - port: 80
     targetPort: 8080
+  type: LoadBalancer
+  # TODO ^^ simplest solution for now, long-term we'll use Front Door
 ---
 apiVersion: apps/v1
 kind: Deployment
