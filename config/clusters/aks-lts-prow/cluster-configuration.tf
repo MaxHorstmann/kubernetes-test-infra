@@ -38,6 +38,8 @@ resource "azurerm_storage_account" "storage" {
   account_replication_type = "GRS"
 }
 
+# TODO probably wanna add azurerm_cdn_frontdoor_custom_domain
+
 resource "azurerm_kubernetes_cluster" "cluster" {
   location            = var.location
   name                = var.cluster_name
