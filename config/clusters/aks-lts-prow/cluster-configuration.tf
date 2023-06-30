@@ -30,6 +30,14 @@ resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
 }
 
+resource "azurerm_storage_account" "storage" {
+  name                     = "aksltsprowstorage"
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = var.location
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+}
+
 resource "azurerm_kubernetes_cluster" "cluster" {
   location            = var.location
   name                = var.cluster_name
