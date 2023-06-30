@@ -20,7 +20,7 @@ periodics:
       timeout: 1h
     spec:
       containers:
-        - image: golang:1.20
+        - image: public.ecr.aws/docker/library/golang:1.20
           env:
             - name: GO_TEST_FLAGS
               value: "-race -count 3"
@@ -58,7 +58,7 @@ periodics:
       timeout: 1h
     spec:
       containers:
-        - image: golang:1.20
+        - image: public.ecr.aws/docker/library/golang:1.20
           command:
             - make
           args:
@@ -97,7 +97,9 @@ periodics:
         - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           env:
             - name: E2E_KIND_VERSION
-              value: kindest/node:v1.24.7
+              value: kindest/node:v1.24.15
+            - name: BUILDER_IMAGE
+              value: public.ecr.aws/docker/library/golang:1.20
           command:
             # generic runner script, handles DIND, bazelrc for caching, etc.
             - runner.sh
@@ -110,11 +112,11 @@ periodics:
             privileged: true
           resources:
             requests:
-              cpu: "5"
-              memory: "20Gi"
+              cpu: "10"
+              memory: "40Gi"
             limits:
-              cpu: "5"
-              memory: "20Gi"
+              cpu: "10"
+              memory: "40Gi"
   - interval: 12h
     name: periodic-kueue-test-e2e-main-1-25
     cluster: eks-prow-build-cluster
@@ -139,7 +141,9 @@ periodics:
         - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           env:
             - name: E2E_KIND_VERSION
-              value: kindest/node:v1.25.3
+              value: kindest/node:v1.25.11
+            - name: BUILDER_IMAGE
+              value: public.ecr.aws/docker/library/golang:1.20
           command:
             # generic runner script, handles DIND, bazelrc for caching, etc.
             - runner.sh
@@ -152,11 +156,11 @@ periodics:
             privileged: true
           resources:
             requests:
-              cpu: "5"
-              memory: "20Gi"
+              cpu: "10"
+              memory: "40Gi"
             limits:
-              cpu: "5"
-              memory: "20Gi"
+              cpu: "10"
+              memory: "40Gi"
   - interval: 12h
     name: periodic-kueue-test-e2e-main-1-26
     cluster: eks-prow-build-cluster
@@ -181,7 +185,9 @@ periodics:
         - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           env:
             - name: E2E_KIND_VERSION
-              value: kindest/node:v1.26.2
+              value: kindest/node:v1.26.6
+            - name: BUILDER_IMAGE
+              value: public.ecr.aws/docker/library/golang:1.20
           command:
             # generic runner script, handles DIND, bazelrc for caching, etc.
             - runner.sh
@@ -194,11 +200,11 @@ periodics:
             privileged: true
           resources:
             requests:
-              cpu: "5"
-              memory: "20Gi"
+              cpu: "10"
+              memory: "40Gi"
             limits:
-              cpu: "5"
-              memory: "20Gi"
+              cpu: "10"
+              memory: "40Gi"
   - interval: 12h
     name: periodic-kueue-test-e2e-main-1-27
     cluster: eks-prow-build-cluster
@@ -223,7 +229,9 @@ periodics:
         - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
           env:
             - name: E2E_KIND_VERSION
-              value: kindest/node:v1.27.2
+              value: kindest/node:v1.27.3
+            - name: BUILDER_IMAGE
+              value: public.ecr.aws/docker/library/golang:1.20
           command:
             # generic runner script, handles DIND, bazelrc for caching, etc.
             - runner.sh
@@ -236,8 +244,8 @@ periodics:
             privileged: true
           resources:
             requests:
-              cpu: "5"
-              memory: "20Gi"
+              cpu: "10"
+              memory: "40Gi"
             limits:
-              cpu: "5"
-              memory: "20Gi"
+              cpu: "10"
+              memory: "40Gi"

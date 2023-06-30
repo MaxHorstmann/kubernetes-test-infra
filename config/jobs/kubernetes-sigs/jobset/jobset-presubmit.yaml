@@ -9,23 +9,29 @@ presubmits:
       testgrid-dashboards: sig-apps
       testgrid-tab-name: pull-jobset-test-unit-main
       description: "Run jobset unit tests"
+    labels:
+      preset-dind-enabled: "true"
     spec:
       containers:
-      - image: golang:1.20
+      - image: gcr.io/k8s-staging-test-infra/kubekins-e2e:v20230616-e730b60769-master
         env:
         - name: GO_TEST_FLAGS
           value: "-race -count 3"
         command:
-        - make
+        # generic runner script, handles DIND, bazelrc for caching, etc.
+        - runner.sh
         args:
+        - make
         - test
+        securityContext:
+          privileged: true
         resources:
           limits:
-            cpu: 1
-            memory: 4Gi
+            cpu: 2
+            memory: 8Gi
           requests:
-            cpu: 1
-            memory: 4Gi
+            cpu: 2
+            memory: 8Gi
   - name: pull-jobset-test-integration-main
     cluster: eks-prow-build-cluster
     always_run: true
@@ -37,18 +43,18 @@ presubmits:
       description: "Run jobset integration tests"
     spec:
       containers:
-      - image: golang:1.20
+      - image: public.ecr.aws/docker/library/golang:1.20
         command:
         - make
         args:
         - test-integration
         resources:
           limits:
-            cpu: 1
-            memory: 4Gi
+            cpu: 2
+            memory: 8Gi
           requests:
-            cpu: 1
-            memory: 4Gi
+            cpu: 2
+            memory: 8Gi
   - name: pull-jobset-test-e2e-main-1-24
     cluster: eks-prow-build-cluster
     always_run: true
@@ -77,11 +83,11 @@ presubmits:
           privileged: true
         resources:
           limits:
-            cpu: 1
-            memory: 4Gi
+            cpu: 2
+            memory: 8Gi
           requests:
-            cpu: 1
-            memory: 4Gi
+            cpu: 2
+            memory: 8Gi
   - name: pull-jobset-test-e2e-main-1-25
     cluster: eks-prow-build-cluster
     always_run: true
@@ -110,11 +116,11 @@ presubmits:
           privileged: true
         resources:
           limits:
-            cpu: 1
-            memory: 4Gi
+            cpu: 2
+            memory: 8Gi
           requests:
-            cpu: 1
-            memory: 4Gi
+            cpu: 2
+            memory: 8Gi
   - name: pull-jobset-test-e2e-main-1-26
     cluster: eks-prow-build-cluster
     always_run: true
@@ -143,11 +149,11 @@ presubmits:
           privileged: true
         resources:
           limits:
-            cpu: 1
-            memory: 4Gi
+            cpu: 2
+            memory: 8Gi
           requests:
-            cpu: 1
-            memory: 4Gi
+            cpu: 2
+            memory: 8Gi
   - name: pull-jobset-verify-main
     cluster: eks-prow-build-cluster
     branches:
@@ -161,15 +167,15 @@ presubmits:
       description: "Run jobset verify checks"
     spec:
       containers:
-      - image: golang:1.20
+      - image: public.ecr.aws/docker/library/golang:1.20
         command:
         - make
         args:
         - verify
         resources:
           limits:
-            cpu: 1
-            memory: 4Gi
+            cpu: 2
+            memory: 8Gi
           requests:
-            cpu: 1
-            memory: 4Gi
+            cpu: 2
+            memory: 8Gi
